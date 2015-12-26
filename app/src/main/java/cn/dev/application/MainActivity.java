@@ -5,9 +5,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cn.dev.application.loopjnet.Callback;
+import cn.dev.application.loopjnet.HttpClient;
+import cn.dev.application.loopjnet.RequestBody;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +32,34 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+            }
+        });
+
+        test();
+        test();
+        test();
+        test();
+    }
+
+    private void test() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("string","http come");
+            jsonObject.put("boolean",true);
+            jsonObject.put("int","998");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        RequestBody requestBody = new RequestBody(jsonObject);
+        HttpClient.getInstance().post(null, requestBody, new Callback() {
+            @Override
+            public void onFailure(String errorDes) {
+                Log.i(HttpClient.TAG,"MainActivity onFailure");
+            }
+
+            @Override
+            public void onSuccess(String responseString) {
+                Log.i(HttpClient.TAG,"MainActivity onSuccess");
             }
         });
     }
