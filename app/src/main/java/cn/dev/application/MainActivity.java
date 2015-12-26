@@ -1,35 +1,13 @@
 package cn.dev.application;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import cn.dev.application.utils.ImageUtils;
-import cn.dev.application.utils.SPUtils;
-
-
-/*
-ldpi
-mdpi
-hdpi
-xhdpi
-xxhdpi
-*/
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,46 +26,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        test();
-
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        Toast.makeText(this,"//"+displayMetrics.densityDpi,Toast.LENGTH_LONG).show();
-
-        SPUtils.logSP();
-
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeResource(getResources(), R.drawable.a, options);
-        Log.i("ImageUtils",options.outWidth+"\t"+options.outHeight);
-
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.a);
-        ImageUtils.logBitmapInfo(bitmap);
-        ImageView imageView = (ImageView) findViewById(R.id.iv);
-        imageView.setImageBitmap(bitmap);
-
-        ImageUtils.logBitmapInfo(imageView);
-
-    }
-
-    private void test() {
-        TextView textView1 = (TextView) findViewById(R.id.tv_01);
-        TextView textView2 = (TextView) findViewById(R.id.tv_02);
-
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        int w = displayMetrics.widthPixels;
-        int h = displayMetrics.heightPixels;
-
-//        textView1.setText("TextView 1：" + Math.sqrt((320 * 320) + (480 * 480)) / 3.2);
-        textView1.setText("w:"+w+"h:"+h);
-
-        WindowManager windowManager = (WindowManager)getSystemService(
-                Context.WINDOW_SERVICE);
-        Display d = windowManager.getDefaultDisplay();
-        textView2.setText("w:"+d.getWidth()+"h:"+d.getHeight());
-
-        textView1.setTextSize(25);
-
     }
 
     @Override
