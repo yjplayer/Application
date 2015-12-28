@@ -51,8 +51,7 @@ public class HttpClient {
             public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
                 try {
                     //TODO parse code
-                    Log.i(TAG,"statusCode:"+statusCode);
-                    Log.i(TAG,responseString==null?"response is null":responseString);
+                    Log.i(TAG,"onSuccess\n"+responseString==null?"response is null":responseString);
                     callback.onSuccess(responseString);
                 } catch (Exception e) {
                     Log.i(TAG,"catch a exception",e);
