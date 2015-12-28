@@ -13,8 +13,15 @@ android {
     }
     buildTypes {
         release {
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+            buildConfigField "String", "BASE_URL", "\"http://www.baidu.com\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug{
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            buildConfigField "String", "BASE_URL", "\"http://www.qq.com\""
         }
     }
 //    useLibrary 'org.apache.http.legacy'
