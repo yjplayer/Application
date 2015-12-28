@@ -5,5 +5,5 @@ package cn.dev.application.loopjnet;
  */
 public interface URLConstants {
 
-    String BASE_URL = "http://www.jinyuanbao.cn/";
+    String BASE_URL = "http://www.baidu.com/";
 }
