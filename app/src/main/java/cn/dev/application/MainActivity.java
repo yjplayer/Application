@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import cn.dev.application.loopjnet.Callback;
 import cn.dev.application.loopjnet.HttpClient;
 import cn.dev.application.loopjnet.RequestBody;
+import cn.dev.application.utils.Test;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,10 +36,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        test();
-        test();
-        test();
-        test();
+        Test.test();
     }
 
     private void test() {
