@@ -13,8 +13,15 @@ android {
     }
     buildTypes {
         release {
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+            buildConfigField "String", "BASE_URL", "\"http://www.baidu.com\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug{
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            buildConfigField "String", "BASE_URL", "\"http://www.qq.com\""
         }
     }
 //    useLibrary 'org.apache.http.legacy'
@@ -27,4 +34,5 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.loopj.android:android-async-http:1.4.9'
     compile 'com.google.code.gson:gson:2.5'
+    compile 'com.squareup.okhttp:okhttp:2.7.0'
 }
