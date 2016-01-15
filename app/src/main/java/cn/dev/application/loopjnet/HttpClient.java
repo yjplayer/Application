@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.FileAsyncHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 
 /**
@@ -38,7 +39,7 @@ public class HttpClient {
 
     public void post(String relativeUrl, final RequestBody requestBody, final Callback callback){
         String url = !TextUtils.isEmpty(relativeUrl)&&relativeUrl.startsWith("http://")?
-                relativeUrl: URLConstants.BASE_URL+relativeUrl;
+                relativeUrl: API.BASE_URL+relativeUrl;
 
         TextHttpResponseHandler textHttpResponseHandler = new TextHttpResponseHandler() {
             @Override
@@ -60,8 +61,12 @@ public class HttpClient {
         };
 
         Log.i(TAG,"===========================================http ===========================================");
-        Log.i(TAG,relativeUrl==null?URLConstants.BASE_URL:relativeUrl);
+        Log.i(TAG,relativeUrl==null? API.BASE_URL:relativeUrl);
         asyncHttpClient.post(url,requestBody.createRequestParams(),textHttpResponseHandler);
         Log.i(TAG,"===========================================http ===========================================");
+    }
+
+    public void load(String url,FileAsyncHttpResponseHandler handler){
+        asyncHttpClient.get(url, handler);
     }
 }
