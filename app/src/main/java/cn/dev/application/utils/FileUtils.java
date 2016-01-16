@@ -57,6 +57,20 @@ public class FileUtils {
         return availableBlocks*blockSize>needByte;
     }
 
+    public static void logFileInfo(File file){
+        XLog.i(file.getAbsolutePath());
+        if (file.exists()){
+            File[] files = file.listFiles();
+            for (File f : files){
+                if (f.isDirectory()){
+                    logFileInfo(f);
+                }else {
+                    XLog.i(f.getName());
+                }
+            }
+        }
+    }
+
     /**
      * log example："sdcard total size：11GB  sdcard free size：10GB；
      */
