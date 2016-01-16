@@ -3,6 +3,7 @@ package cn.dev.application.engine;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
@@ -49,7 +50,7 @@ public class DownLoad {
     private static ArrayList<String> downCache = new ArrayList<String>();
     private String apkName = "update.apk";
 
-    public void download() {
+    public void downloadByHttpClient() {
         if (!checkEnvironment()) {
             return;
         }
@@ -102,18 +103,17 @@ public class DownLoad {
                 (NotificationManager) UIUtils.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(UIUtils.getContext());
         mBuilder.setContentTitle("xxx下载中……")
+                .setOngoing(true)
+                .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentText("已下载0%")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker("开始下载")
+                .setTicker("正在下载")
+                .setLargeIcon(BitmapFactory.decodeResource(
+                        UIUtils.getContext().getResources(),
+                        R.mipmap.ic_launcher
+                ))
                 .setProgress(100,0,false);
         mNotifyManager.notify(notifyID,mBuilder.build());
     }
-
-    /*public void updateNotification(String title,String content){
-        mBuilder.setContentText(title)
-                .setContentTitle(content);
-        mNotifyManager.notify(notifyID,mBuilder.build());
-    }*/
 
     /**
      * 安装apk
@@ -229,25 +229,25 @@ public class DownLoad {
                     conn.connect();
                     int response = conn.getResponseCode();
                     if (response == 200) {
-                        long accLen = 0;
-                        int cycle = 0;
+                        long receiveLength = 0;
+                        int count = 0;
                         int contentLength = conn.getContentLength();
                         is = conn.getInputStream();
-                        int len = -1;
+                        int length = -1;
                         byte[] buffer = new byte[8 * 1024];
                         outputStream = UIUtils.getContext().openFileOutput(apkName,Context.MODE_WORLD_READABLE);
-                        while ((len = is.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, len);
-                            accLen = accLen + len;
-                            XLog.i(len + XLog.LINE_SEPARATOR +
-                            accLen + XLog.LINE_SEPARATOR + cycle);
-                            if (cycle++ % 50 != 0) {
+                        while ((length = is.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, length);
+                            receiveLength += length;
+                            XLog.i(length + XLog.LINE_TAB +
+                            receiveLength + XLog.LINE_TAB + count
+                            +XLog.LINE_TAB + contentLength);
+                            if (count++ % 50 != 0) {
                                 continue;
                             }
-                            int progress = (int) (accLen * 100.0F / contentLength);
+                            int progress = (int) (receiveLength * 100.0F / contentLength);
                             mBuilder.setProgress(100,progress,false)
                                     .setContentTitle("下载中……")
-                                    .setTicker("下载中……")
                                     .setContentText("已下载"+progress+"%");
                             mNotifyManager.notify(notifyID,mBuilder.build());
                         }
@@ -300,7 +300,7 @@ public class DownLoad {
         }
 
         File fileDir = FileUtils.createFile(null, UIUtils.getContext().getFilesDir().getAbsolutePath()
-                + File.separator + "download");
+                + File.separator + "downloadByHttpClient");
         if (!FileUtils.isAvailable(50, fileDir)) {
             Toast.makeText(UIUtils.getContext(), "存储空间不足", Toast.LENGTH_LONG).show();
             return false;
