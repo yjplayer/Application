@@ -12,7 +12,7 @@ public class IOUtils {
      * 关闭资源
      * @param closeable
      */
-    public void close(Closeable closeable){
+    public static void close(Closeable closeable){
         if (closeable != null){
             try {
                 closeable.close();

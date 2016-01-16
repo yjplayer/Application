@@ -36,6 +36,14 @@ public class FileUtils {
         return getAvailableBytes()>needByte;
     }
 
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isAvailable(long needMB,File file){
         long needByte = needMB*1024*1024;
         StatFs statFs=new StatFs(file.getPath());
