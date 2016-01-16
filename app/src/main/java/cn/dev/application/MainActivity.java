@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void test() {
         DownLoad downLoadEngine = new DownLoad(url);
-        downLoadEngine.download();
+        downLoadEngine.downloadByHttpURLConnection();
     }
 
     @Override

@@ -220,7 +220,6 @@ public class DownLoad {
                 FileOutputStream outputStream = null;
                 try {
                     downCache.add(url);
-                    outputStream = UIUtils.getContext().openFileOutput(apkName,Context.MODE_WORLD_READABLE);
                     URL u = new URL(url);
                     HttpURLConnection conn = (HttpURLConnection) u.openConnection();
                     conn.setReadTimeout(10 * 1000);
@@ -230,14 +229,34 @@ public class DownLoad {
                     conn.connect();
                     int response = conn.getResponseCode();
                     if (response == 200) {
+                        long accLen = 0;
+                        int cycle = 0;
                         int contentLength = conn.getContentLength();
                         is = conn.getInputStream();
                         int len = -1;
                         byte[] buffer = new byte[8 * 1024];
-                        outputStream = new FileOutputStream(file);
+                        outputStream = UIUtils.getContext().openFileOutput(apkName,Context.MODE_WORLD_READABLE);
                         while ((len = is.read(buffer)) != -1) {
                             outputStream.write(buffer, 0, len);
+                            accLen = accLen + len;
+                            XLog.i(len + XLog.LINE_SEPARATOR +
+                            accLen + XLog.LINE_SEPARATOR + cycle);
+                            if (cycle++ % 50 != 0) {
+                                continue;
+                            }
+                            int progress = (int) (accLen * 100.0F / contentLength);
+                            mBuilder.setProgress(100,progress,false)
+                                    .setContentTitle("下载中……")
+                                    .setTicker("下载中……")
+                                    .setContentText("已下载"+progress+"%");
+                            mNotifyManager.notify(notifyID,mBuilder.build());
                         }
+                        mBuilder.setProgress(0,0,false)
+                                .setContentTitle("xxx")
+                                .setContentText("下载完成");
+                        mNotifyManager.notify(notifyID,mBuilder.build());
+                        mNotifyManager.cancel(notifyID);
+                        downCache.remove(url);
                         mHandler.sendEmptyMessage(LOAD_OK);
                     } else {
                         mHandler.sendEmptyMessage(LOAD_ERROR);
@@ -245,6 +264,7 @@ public class DownLoad {
                 } catch (IOException e) {
                         mHandler.sendEmptyMessage(LOAD_ERROR);
                 } finally {
+                    mNotifyManager.cancel(notifyID);
                     downCache.remove(url);
                     IOUtils.close(outputStream);
                     IOUtils.close(is);
