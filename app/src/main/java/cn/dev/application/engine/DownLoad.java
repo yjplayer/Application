@@ -4,7 +4,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
@@ -12,7 +13,6 @@ import com.loopj.android.http.FileAsyncHttpResponseHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,24 +29,25 @@ import cn.dev.application.utils.XLog;
 import cz.msebera.android.httpclient.Header;
 
 /**
+ * apk的下载与更新
  * Created by air on 16/1/15.
  */
 public class DownLoad {
 
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
-    private int notifyID = 999;
+    private int notifyID = 9999;
     private int oldProgress = 3;
 
     public DownLoad(String url) {
         this.url = url;
     }
 
-
-
-    private String url = "http://p.gdown.baidu.com/c10e754d2c07d06165a7fa77f828ff56253660db7aa48730409b871c662531415a979901a915832372946cd73b5af6284df8f986121bc76839ee05b565e7275c3b40c5e2767c18aa60de2434625777ed38f55195ab71a5f629a80630d3d92ea8b2c0ca7d85810c56f5e2eccd3fda703b97799b69371a48f5b978286c8a939045e76dce7129114084441670b5b360ff9c4cc7ad98926f35d09ad6041a841fd9d1c78aea881d6081919024f81b18c95d0ed9fa2e0d0d81805af7012ecdde03125f0daa4deff75c9c1c9d29645460a141c03c01ad0e57d30d09f92dc1b8d0437d6544e906e1f146c2282093102d7e6c0d3ef5a7e5aeae3de57bf5a94af9e413976f250cd3f662fedd0031352b9410f892b75aee705cfd2c4a490470e74d95835a9fabaea301eebf607f3ce0c87c8791a6f0a3ba11adb9f775ddb8420f96f1a4d67c";
+    private String url;
     private File file;
+    private File installFile;
     private static ArrayList<String> downCache = new ArrayList<String>();
+    private String apkName = "update.apk";
 
     public void download() {
         if (!checkEnvironment()) {
@@ -57,17 +58,18 @@ public class DownLoad {
 
             @Override
             public void onStart() {
+                XLog.i("loading start");
                 downCache.add(url);
             }
 
             @Override
             public void onProgress(long bytesWritten, long totalSize) {
                 super.onProgress(bytesWritten, totalSize);
-//                XLog.i(String.format("Progress %d from %d (%2.0f%%)", bytesWritten, totalSize, (totalSize > 0) ? (bytesWritten * 1.0 / totalSize) * 100 : -1));
                 int progress = (int) ((bytesWritten * 1.0 / totalSize) * 100);
                 if (progress - oldProgress > 7){
-                    mBuilder.setProgress(100,progress,false);
-                    mBuilder.setContentText("已下载"+progress+"%");
+                    mBuilder.setProgress(100,progress,false)
+                            .setContentTitle("下载中……")
+                            .setContentText("已下载"+progress+"%");
                     mNotifyManager.notify(notifyID,mBuilder.build());
                     oldProgress = progress;
                 }
@@ -75,8 +77,10 @@ public class DownLoad {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, File file) {
+                mNotifyManager.cancel(notifyID);
                 file.delete();
                 downCache.remove(url);
+                Toast.makeText(UIUtils.getContext(),"下载失败",Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -115,19 +119,28 @@ public class DownLoad {
      * 安装apk
      */
     private void installApk() {
-        copyForInstallCanRead();
-        Uri uri = Uri.fromFile(file);
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setDataAndType(uri, "application/vnd.android.package-archive");
-        UIUtils.getContext().startActivity(intent);
+        try {
+            installFile = new File(UIUtils.getContext().getFilesDir(),apkName);
+            if (installFile.exists()){
+                installFile.delete();
+            }
+            copyForInstallCanRead();
+            Uri uri = Uri.fromFile(installFile);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+            UIUtils.getContext().startActivity(intent);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(UIUtils.getContext(),"下载安装失败",Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
      * 修改apk的读取权限，使Install程序可以读取。
      */
-    private void copyForInstallCanRead() {
+    private void copyForInstallCanRead() throws IOException {
         FileInputStream fileInputStream = null;
         FileOutputStream fileOutputStream = null;
         try {
@@ -141,70 +154,109 @@ public class DownLoad {
             FileUtils.logFileInfo(UIUtils.getContext().getFilesDir());
             file.delete();
             FileUtils.logFileInfo(UIUtils.getContext().getFilesDir());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(UIUtils.getContext(),"下载安装失败",Toast.LENGTH_LONG).show();
-        }catch (IOException e) {
-            Toast.makeText(UIUtils.getContext(),"下载安装失败",Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }finally {
+        } finally {
             IOUtils.close(fileInputStream);
             IOUtils.close(fileOutputStream);
         }
     }
 
-    private class DownloadApkTask extends AsyncTask<String, Integer, Void> {
+    public void downloadByHttpURLConnection(){
+        if (downCache.contains(url)) {
+            Toast.makeText(UIUtils.getContext(), "正在下载中……", Toast.LENGTH_LONG).show();
+            return;
+        }
 
+        if (!FileUtils.isExternalStorageWritable()) {
+            Toast.makeText(UIUtils.getContext(), "存储空间不存在", Toast.LENGTH_LONG).show();
+            return ;
+        }
+
+        if (!FileUtils.isAvailable(50, UIUtils.getContext().getFilesDir())) {
+            Toast.makeText(UIUtils.getContext(), "存储空间不足", Toast.LENGTH_LONG).show();
+            return;
+        }
+        installFile = new File(UIUtils.getContext().getFilesDir(),apkName);
+        if (installFile.exists()){
+            installFile.delete();
+        }
+        mHandler = new DownloadHandler();
+        notification();
+        downloadFile();
+    }
+
+    private final int LOAD_OK = 200;
+    private final int LOAD_ERROR = 300;
+    private DownloadHandler mHandler;
+    private class DownloadHandler extends Handler{
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            for (Integer i : values) {
-                XLog.i("onProgressUpdate:" + i);
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case LOAD_OK:
+                    install();
+                    break;
+                case LOAD_ERROR:
+                    showError();
+                    break;
+                default:
+                    break;
             }
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-            downloadApk(url);
-            return null;
         }
     }
 
-    private void downloadApk(String apkUrl) {
-        InputStream is = null;
-        FileOutputStream outputStream = null;
-        try {
-            URL url = new URL(apkUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10 * 1000);
-            conn.setConnectTimeout(15 * 1000);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            conn.connect();
-            int response = conn.getResponseCode();
-            XLog.i("The response is: " + response);
-            if (response == 200) {
-                is = conn.getInputStream();
-                int len = -1;
-                byte[] buffer = new byte[8 * 1024];
-                outputStream = new FileOutputStream(file);
-                while ((len = is.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, len);
-                }
-                XLog.i("down over:");
-            } else {
+    private void install() {
+        Uri uri = Uri.fromFile(installFile);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setDataAndType(uri, "application/vnd.android.package-archive");
+        UIUtils.getContext().startActivity(intent);
+    }
 
+    private void downloadFile(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                InputStream is = null;
+                FileOutputStream outputStream = null;
+                try {
+                    downCache.add(url);
+                    outputStream = UIUtils.getContext().openFileOutput(apkName,Context.MODE_WORLD_READABLE);
+                    URL u = new URL(url);
+                    HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+                    conn.setReadTimeout(10 * 1000);
+                    conn.setConnectTimeout(15 * 1000);
+                    conn.setRequestMethod("GET");
+                    conn.setDoInput(true);
+                    conn.connect();
+                    int response = conn.getResponseCode();
+                    if (response == 200) {
+                        int contentLength = conn.getContentLength();
+                        is = conn.getInputStream();
+                        int len = -1;
+                        byte[] buffer = new byte[8 * 1024];
+                        outputStream = new FileOutputStream(file);
+                        while ((len = is.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, len);
+                        }
+                        mHandler.sendEmptyMessage(LOAD_OK);
+                    } else {
+                        mHandler.sendEmptyMessage(LOAD_ERROR);
+                    }
+                } catch (IOException e) {
+                        mHandler.sendEmptyMessage(LOAD_ERROR);
+                } finally {
+                    downCache.remove(url);
+                    IOUtils.close(outputStream);
+                    IOUtils.close(is);
+                }
             }
-        } catch (IOException e) {
-            XLog.e("down error:" + e);
-        } finally {
-            IOUtils.close(outputStream);
-            IOUtils.close(is);
+        }).start();
+    }
+
+    private void showError(){
+        Toast.makeText(UIUtils.getContext(),"下载失败",Toast.LENGTH_LONG).show();
+        if (installFile.exists()){
+            installFile.delete();
         }
     }
 

@@ -58,14 +58,17 @@ public class FileUtils {
     }
 
     public static void logFileInfo(File file){
-        XLog.i(file.getAbsolutePath());
+//        XLog.i(file.getAbsolutePath());
+        Log.i(TAG,file.getAbsolutePath());
+
         if (file.exists()){
             File[] files = file.listFiles();
             for (File f : files){
                 if (f.isDirectory()){
                     logFileInfo(f);
                 }else {
-                    XLog.i(f.getName());
+                    Log.i(TAG,f.getPath() + "\t" + f.getName());
+//                    XLog.i(f.getName());
                 }
             }
         }

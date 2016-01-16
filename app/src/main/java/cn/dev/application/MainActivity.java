@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void download(View view){
         DownLoad downLoadEngine = new DownLoad(url);
-        downLoadEngine.download();
+        downLoadEngine.downloadByHttpURLConnection();
     }
 
     private void test() {

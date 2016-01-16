@@ -3,6 +3,8 @@ package cn.dev.application.utils;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 /**
  * Created by air on 15/12/28.
@@ -41,5 +43,16 @@ public class AppUtils {
             e.printStackTrace();
         }
         return versionCode;
+    }
+
+    /**
+     * 是否网络连接
+     * @return
+     */
+    public boolean isOnline() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                UIUtils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
     }
 }
