@@ -15,7 +15,7 @@ public class AppUtils {
      * 获取versionName
      * @return
      */
-    public String getVersionName(){
+    public static String getVersionName(){
         Context context = UIUtils.getContext();
         String versioname = null;
         PackageManager packageManager = context.getPackageManager();
@@ -32,7 +32,7 @@ public class AppUtils {
      * 获取versionCode
      * @return
      */
-    public int getVersionCode(){
+    public static int getVersionCode(){
         Context context = UIUtils.getContext();
         int versionCode = 0;
         PackageManager packageManager = context.getPackageManager();

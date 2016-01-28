@@ -1,11 +1,7 @@
 package cn.dev.application.loopjnet;
 
-import android.text.TextUtils;
-import android.util.Log;
-
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.FileAsyncHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
 
 /**
  * Created by air on 2015/12/26.
@@ -37,33 +33,8 @@ public class HttpClient {
         asyncHttpClient.setUserAgent("client_info:Android");
     }
 
-    public void post(String relativeUrl, final RequestBody requestBody, final Callback callback){
-        String url = !TextUtils.isEmpty(relativeUrl)&&relativeUrl.startsWith("http://")?
-                relativeUrl: API.BASE_URL+relativeUrl;
-
-        TextHttpResponseHandler textHttpResponseHandler = new TextHttpResponseHandler() {
-            @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString, Throwable throwable) {
-                Log.i(TAG,statusCode+"\t"+(responseString==null?"response is null":responseString));
-                callback.onFailure(responseString);
-            }
-
-            @Override
-            public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, String responseString) {
-                try {
-                    //TODO parse code
-                    Log.i(TAG,"onSuccess\n"+responseString==null?"response is null":responseString);
-                    callback.onSuccess(responseString);
-                } catch (Exception e) {
-                    Log.i(TAG,"catch a exception",e);
-                }
-            }
-        };
-
-        Log.i(TAG,"===========================================http ===========================================");
-        Log.i(TAG,relativeUrl==null? API.BASE_URL:relativeUrl);
-        asyncHttpClient.post(url,requestBody.createRequestParams(),textHttpResponseHandler);
-        Log.i(TAG,"===========================================http ===========================================");
+    public Call newCall(Request request){
+        return new Call(request,asyncHttpClient);
     }
 
     public void load(String url,FileAsyncHttpResponseHandler handler){
